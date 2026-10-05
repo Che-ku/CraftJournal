@@ -9,18 +9,37 @@ struct ContentView: View {
     
     private var entries: FetchedResults<CraftEntry>
     @State private var showingAddEntry = false
+    @State private var searchText = ""
     
     var body: some View {
         NavigationStack {
-        List {
-                ForEach(entries) { entry in
-                    NavigationLink {
-                        EntryDetailView(entry: entry)
-                    } label: {
-                        EntryRow(entry: entry)
+            if entries.isEmpty {
+                ContentUnavailableView(
+                    "No Craft Entries",
+                    systemImage: "book.closed",
+                    description: Text("Tap + to add your first craft entry.")
+                )
+            } else {
+                List {
+                    ForEach(entries) { entry in
+                        NavigationLink {
+                            EntryDetailView(entry: entry)
+                        } label: {
+                            EntryRow(entry: entry)
+                        }
+                    }
+                    .onDelete(perform: deleteEntries)
+                }
+                .onChange(of: searchText) { _, newValue in
+                    if newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        entries.nsPredicate = nil
+                    } else {
+                        entries.nsPredicate = NSPredicate(
+                            format: "title CONTAINS[cd] %@",
+                            newValue
+                        )
                     }
                 }
-                .onDelete(perform: deleteEntries)
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -30,12 +49,18 @@ struct ContentView: View {
                         Label("Add", systemImage: "plus")
                     }
                 }
+                ToolbarItem(placement: .topBarLeading) {
+                    Text("\(entries.count) \(entries.count == 1 ? "entry" : "entries")")
+                        .foregroundStyle(.secondary)
+                }
             }
             .sheet(isPresented: $showingAddEntry) {
                 AddEntryView()
                     .environment(\.managedObjectContext, viewContext)
             }
+            
         }
+        .searchable(text: $searchText, prompt: "Search titles")
     }
     private func deleteEntries(offsets: IndexSet) {
         offsets.map { entries[$0] }.forEach(viewContext.delete)
@@ -62,6 +87,7 @@ struct EntryRow: View {
                     .frame(width: 60, height: 60)
         foregroundStyle(.secondary)
             }
+            
             VStack(alignment: .leading) {
                 Text(entry.title ?? "Untitled")
                     .font(.headline)

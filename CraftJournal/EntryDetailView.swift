@@ -4,7 +4,7 @@ struct EntryDetailView: View {
     @ObservedObject var entry: CraftEntry
     @State private var showingEdit = false
     @Environment(\.managedObjectContext) private var viewContext
-    
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {

@@ -1,23 +1,38 @@
 import SwiftUI
-import PhotosUI
 internal import CoreData
 
 struct EditEntryView: View {
-    @ObservedObject var entry: CraftEntry
-
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
 
+    @ObservedObject var entry: CraftEntry
+
     @State private var title: String
-    @State private var craftType: String
+    @State private var selectedCraft: String
     @State private var notes: String
     @State private var artisanName: String
+
+    let crafts = [
+        "Shingzo",
+        "Dozo",
+        "Parzo",
+        "Lhazo",
+        "Jinzo",
+        "Lugzo",
+        "Garzo",
+        "Troeko",
+        "Tsharzo",
+        "Thagzo",
+        "Tshemzo",
+        "Shagzo",
+        "Deh-sho"
+    ]
 
     init(entry: CraftEntry) {
         self.entry = entry
 
         _title = State(initialValue: entry.title ?? "")
-        _craftType = State(initialValue: entry.craftType ?? crafts[0])
+        _selectedCraft = State(initialValue: entry.craftType ?? "Shingzo")
         _notes = State(initialValue: entry.notes ?? "")
         _artisanName = State(initialValue: entry.artisanName ?? "")
     }
@@ -25,22 +40,21 @@ struct EditEntryView: View {
     var body: some View {
         NavigationStack {
             Form {
-                TextField("Title", text: $title)
+                Section("Craft Information") {
+                    TextField("Title", text: $title)
 
-                TextField("Artisan Name", text: $artisanName)
-
-                Picker("Craft", selection: $craftType) {
-                    ForEach(crafts, id: \.self) { craft in
-                        Text(craft)
+                    Picker("Craft Type", selection: $selectedCraft) {
+                        ForEach(crafts, id: \.self) { craft in
+                            Text(craft)
+                        }
                     }
+
+                    TextField("Artisan name", text: $artisanName)
                 }
 
                 Section("Notes") {
-                    TextField(
-                        "Notes",
-                        text: $notes,
-                        axis: .vertical
-                    )
+                    TextField("Notes", text: $notes, axis: .vertical)
+                        .lineLimit(4...8)
                 }
             }
             .navigationTitle("Edit Entry")
@@ -55,7 +69,7 @@ struct EditEntryView: View {
                     Button("Save") {
                         saveChanges()
                     }
-                    .disabled(title.isEmpty)
+                    .disabled(title.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
         }
@@ -63,7 +77,7 @@ struct EditEntryView: View {
 
     private func saveChanges() {
         entry.title = title
-        entry.craftType = craftType
+        entry.craftType = selectedCraft
         entry.notes = notes
         entry.artisanName = artisanName
 
@@ -71,7 +85,7 @@ struct EditEntryView: View {
             try viewContext.save()
             dismiss()
         } catch {
-            print("Could not save changes: \(error)")
+            print("Could not update entry: \(error)")
         }
     }
 }
