@@ -1,11 +1,4 @@
-//
-//  Persistence.swift
-//  CraftJournal
-//
-//  Created by iMac20 on 10/5/26.
-//
-
-import CoreData
+internal import CoreData
 
 struct PersistenceController {
     static let shared = PersistenceController()
@@ -15,8 +8,11 @@ struct PersistenceController {
         let result = PersistenceController(inMemory: true)
         let viewContext = result.container.viewContext
         for _ in 0..<10 {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
+            let entry = CraftEntry(context: viewContext)
+            entry.id = UUID()
+            entry.title = "Sample craft"
+            entry.craftType = "Thagzo"
+            entry.date = Date()
         }
         do {
             try viewContext.save()
